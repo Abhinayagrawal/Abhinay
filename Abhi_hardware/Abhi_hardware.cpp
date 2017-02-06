@@ -73,8 +73,9 @@ int getMilliSpan(int nTimeStart){
         return nSpan;
 }
 
-//const triggerType chosenTrigger = SOFTWARE;
-const triggerType chosenTrigger = HARDWARE;
+//const triggerType chosenTrigger = HARDWARE;
+const triggerType chosenTrigger = SOFTWARE;
+
 
 // This function configures the camera to use a trigger. First, trigger mode is
 // set to off in order to select the trigger source. Once the trigger source
@@ -85,16 +86,7 @@ int ConfigureTrigger(INodeMap & nodeMap, bool isPrimary)
     int result = 0;
 
     cout << endl << endl << "*** CONFIGURING TRIGGER ***" << endl << endl;
-
-    if (chosenTrigger == SOFTWARE)
-    {
-        cout << "Software trigger chosen..." << endl;
-    }
-    else if (chosenTrigger == HARDWARE)
-    {
-        cout << "Hardware trigger chosen..." << endl;
-    }
-
+    
     try
     {
         //
@@ -136,7 +128,10 @@ int ConfigureTrigger(INodeMap & nodeMap, bool isPrimary)
             return -1;
         }
 
-        if (chosenTrigger == SOFTWARE)
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        if (isPrimary == true)
         {
             // Set trigger mode to software
             CEnumEntryPtr ptrTriggerSourceSoftware = ptrTriggerSource->GetEntryByName("Software");
@@ -149,88 +144,94 @@ int ConfigureTrigger(INodeMap & nodeMap, bool isPrimary)
             ptrTriggerSource->SetIntValue(ptrTriggerSourceSoftware->GetValue());
 
             cout << "Trigger source set to software..." << endl;
-        }
-        else if (chosenTrigger == HARDWARE)
-        {
-            if(isPrimary == true) {
-                // Set trigger mode to hardware for all primary cameras ('Line2')
-                CEnumEntryPtr ptrTriggerSourceHardware = ptrTriggerSource->GetEntryByName("Line2");
-                if (!IsAvailable(ptrTriggerSourceHardware) || !IsReadable(ptrTriggerSourceHardware))
-                {
-                    cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << endl;
-                    return -1;
-                }
-
-                ptrTriggerSource->SetIntValue(ptrTriggerSourceHardware->GetValue());
-                cout << "Trigger source for primary camera set to hardware Line2" << endl;
-
+                
+            
 #if 0
-                //Enable the 3.3V option i.e. make it true
-                CBooleanPtr ptrV3_3 = nodeMap.GetNode("V3_3Enable");
-                if (!IsAvailable(ptrV3_3) || !IsWritable(ptrV3_3))
-                {
-                    cout << "Unable to retrieve 3.3 V enable value. Aborting..." << endl;
-                    return -1;
-                }
-                CBooleanPtr ptrV3_3Enable = ptrV3_3->GetEntryByName("true");
+            // Set trigger mode to hardware for all primary cameras ('Line2')
+            CEnumEntryPtr ptrTriggerSourceHardware = ptrTriggerSource->GetEntryByName("Line2");
+            if (!IsAvailable(ptrTriggerSourceHardware) || !IsReadable(ptrTriggerSourceHardware))
+            {
+                cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << endl;
+                return -1;
+            }
 
-                if (!IsAvailable(ptrV3_3Enable) || !IsReadable(ptrV3_3Enable))
-                {
-                    cout << "Unable to set voltage 3.3V to true. Aborting..." << endl;
-                    return -1;
-                }
+            ptrTriggerSource->SetIntValue(ptrTriggerSourceHardware->GetValue());
+            cout << "Trigger source for primary camera set to hardware Line2" << endl;
 
-                ptrV3_3->SetValue(ptrV3_3Enable->GetValue());
-                //TODO: print if the value got enabled.
-                ptrV3_3->SetValue(true); 
+            //Enable the 3.3V option i.e. make it true
+            CBooleanPtr ptrV3_3 = nodeMap.GetNode("V3_3Enable");
+            if (!IsAvailable(ptrV3_3) || !IsWritable(ptrV3_3))
+            {
+                cout << "Unable to retrieve 3.3 V enable value. Aborting..." << endl;
+                return -1;
+            }
+            CBooleanPtr ptrV3_3Enable = ptrV3_3->GetEntryByName("true");
+
+            if (!IsAvailable(ptrV3_3Enable) || !IsReadable(ptrV3_3Enable))
+            {
+                cout << "Unable to set voltage 3.3V to true. Aborting..." << endl;
+                return -1;
+            }
+
+            ptrV3_3->SetValue(ptrV3_3Enable->GetValue());
+            //TODO: print if the value got enabled.
+            ptrV3_3->SetValue(true); 
 #endif
 
-            } else {
-                //Set Trigger for all secondary cameras ('Line3')
-                CEnumEntryPtr ptrTriggerSourceHardware = ptrTriggerSource->GetEntryByName("Line3");
-                if (!IsAvailable(ptrTriggerSourceHardware) || !IsReadable(ptrTriggerSourceHardware))
-                {
-                    cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << endl;
-                    return -1;
-                }
-
-                ptrTriggerSource->SetIntValue(ptrTriggerSourceHardware->GetValue());
-
-                cout << "Trigger source for secondary camera set to hardware Line3" << endl;
-
-                //----------------------------------------------------------------------------------//
-                CEnumerationPtr ptrTriggerOverlap = nodeMap.GetNode("TriggerOverlap");
-
-                //TODO: check if code crashes here
-
-                CEnumEntryPtr ptrTriggerOverlapValue = ptrTriggerOverlap->GetEntryByName("ReadOut");
-                if (!IsAvailable(ptrTriggerOverlapValue) || !IsReadable(ptrTriggerOverlapValue))
-                {
-                    cout << "Unable to grab overlap value. Aborting..." << endl;
-                    return -1;
-                }
-                ptrTriggerOverlap->SetIntValue(ptrTriggerOverlapValue->GetValue());
-                cout << "Trigger mode turned back on..." << endl << endl;
+        } else {
+            //Set Trigger for all secondary cameras ('Line3')
+            CEnumEntryPtr ptrTriggerSourceHardware = ptrTriggerSource->GetEntryByName("Line3");
+            if (!IsAvailable(ptrTriggerSourceHardware) || !IsReadable(ptrTriggerSourceHardware))
+            {
+                cout << "Unable to set trigger mode (enum entry retrieval). Aborting..." << endl;
+                return -1;
             }
-        }
-                // Setting trigger selector to FrameBurst/Acquisition/Frame Start Mode
-                CEnumerationPtr ptrTriggerSelector = nodeMap.GetNode("TriggerSelector");
-                if (!IsAvailable(ptrTriggerSelector) || !IsReadable(ptrTriggerSelector)) {
-                    cout << "Unable to get the trigger selectr value. Abort....." << endl << endl;
-                    return -1;
-                }
 
-                CEnumEntryPtr ptrTriggerSelectorSel = ptrTriggerSelector->GetEntryByName("FrameStart");
-                if (!IsAvailable(ptrTriggerSelectorSel) || !IsReadable(ptrTriggerSelectorSel))
-                {
-                    cout << "Unable to selct trigger selector "
-                        "(enum entry retrieval). Aborting..." << endl;
-                    return -1;
-                }
-                ptrTriggerSelector->SetIntValue(ptrTriggerSelectorSel->GetValue());
-                //cout << " Trigger selector: " << ptrTriggerSelector->GetValue() << endl;
-                
-                
+            ptrTriggerSource->SetIntValue(ptrTriggerSourceHardware->GetValue());
+
+            cout << "Trigger source for secondary camera set to hardware Line3" << endl;
+
+            /////////////////////////////////////////////////////////////////////////////////////
+            //Trigger Overlap to Readout
+            /////////////////////////////////////////////////////////////////////////////////////
+            CEnumerationPtr ptrTriggerOverlap = nodeMap.GetNode("TriggerOverlap");
+
+            if (!IsAvailable(ptrTriggerOverlap) || !IsReadable(ptrTriggerOverlap))
+            {
+                cout << "Unable to set trigger overlap. Aborting..." << endl;
+                return -1;
+            }
+
+            CEnumEntryPtr ptrTriggerOverlapValue = ptrTriggerOverlap->GetEntryByName("ReadOut");
+            if (!IsAvailable(ptrTriggerOverlapValue) || !IsReadable(ptrTriggerOverlapValue))
+            {
+                cout << "Unable to grab overlap value. Aborting..." << endl;
+                return -1;
+            }
+            ptrTriggerOverlap->SetIntValue(ptrTriggerOverlapValue->GetValue());
+            cout << "Trigger mode turned back on..." << endl << endl;
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        // Setting trigger selector to FrameBurst/Acquisition/Frame Start Mode
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        CEnumerationPtr ptrTriggerSelector = nodeMap.GetNode("TriggerSelector");
+        if (!IsAvailable(ptrTriggerSelector) || !IsReadable(ptrTriggerSelector)) {
+            cout << "Unable to get the trigger selectr value. Abort....." << endl << endl;
+            return -1;
+        }
+
+        CEnumEntryPtr ptrTriggerSelectorSel = ptrTriggerSelector->GetEntryByName("FrameStart");
+        if (!IsAvailable(ptrTriggerSelectorSel) || !IsReadable(ptrTriggerSelectorSel))
+        {
+            cout << "Unable to selct trigger selector "
+                "(enum entry retrieval). Aborting..." << endl;
+            return -1;
+        }
+        ptrTriggerSelector->SetIntValue(ptrTriggerSelectorSel->GetValue());
+        cout << " Trigger selector: " << ptrTriggerSelector->GetIntValue() << endl;
+
+
 
         //
         // Turn trigger mode on
@@ -250,7 +251,7 @@ int ConfigureTrigger(INodeMap & nodeMap, bool isPrimary)
 
         cout << "Trigger mode turned back on..." << endl << endl;
 
-        //FOr secondary cameras set trigger overlap to Read out
+        //For secondary cameras set trigger overlap to Read out
 #if 0
         if(chosenTrigger == HARDWARE && isPrimary == false) {
             CEnumerationPtr ptrTriggerOverlap = nodeMap.GetNode("TriggerOverlap");
@@ -301,11 +302,9 @@ int GrabNextImageByTrigger(INodeMap & nodeMap, CameraPtr pCam)
         //
         if (chosenTrigger == SOFTWARE)
         {
-#if 0
             // Get user input
             cout << "Press the Enter key to initiate software trigger." << endl;
             getchar();
-#endif
 
             // Execute software trigger
             CCommandPtr ptrSoftwareTriggerCommand = nodeMap.GetNode("TriggerSoftware");
@@ -546,7 +545,7 @@ int ConfigureCamera(CameraPtr pCam, INodeMap & nodeMap) {
 int AcquireImages(CameraList camList)
 {
     int result = 0;
-    CameraPtr pCam = NULL;
+    CameraPtr pCam = NULL, primaryCam = NULL;
     int counter = 0;
 
     try
@@ -581,35 +580,43 @@ int AcquireImages(CameraList camList)
 #endif
         char key = 0;
 
-//            for (unsigned int imageCnt = 0; imageCnt < 15; imageCnt++)
-
+#if 0
         int start = getMilliCount();
         vector<int> v_time;
+#endif
         unsigned int imageCnt = 0;
         Mat src[2];
-        //while(imageCnt < 20)
+        
+        primaryCam = camList.GetByIndex(0);
+        INodeMap & primaryNodeMap = primaryCam->GetNodeMap();
+       
+
         while(key!='q' && key!=27)
         {
             // Retrieve the next image from the trigger
-            for (int i = 0; i < camList.GetSize(); ++i)
-            {
-                // Select camera
-                pCam = camList.GetByIndex(i);
+            result = result | GrabNextImageByTrigger(primaryNodeMap, primaryCam);
 
-                INodeMap & nodeMap = pCam->GetNodeMap();
-                result = result | GrabNextImageByTrigger(nodeMap, pCam);
+            cout << __LINE__ << endl;
+
+            if(result == -1) {
+                cout << __LINE__ << ":Here it goes now for imagecount: " << imageCnt << endl;
+                continue;
             }
-
+        
+            
             for(int i = 0; i < camList.GetSize(); ++i)
             {	
+                        cout << __LINE__ << endl;
                 // Select camera
                 pCam = camList.GetByIndex(i);
+                        cout << __LINE__ << endl;
                 try
                 {
-                    cout << __LINE__  << endl;
-                    // Retrieve the next received image
+                    // Retrieve the next received image .......................this is the line 
+                    // where the program hangs for secondary camera after taking 3 pictures. why TODO:
                     ImagePtr pResultImage = pCam->GetNextImage();
-                    cout << __LINE__  << endl;
+
+                    cout << "Camera: " << i << endl;
 
                     if (pResultImage->IsIncomplete())
                     {
@@ -631,17 +638,14 @@ int AcquireImages(CameraList camList)
                         unsigned int rowBytes
                             = (int)convertedImage->GetImageSize()/convertedImage->GetHeight();
 
-
-                    cout << __LINE__  << endl;
                         src[i] = Mat(convertedImage->GetHeight(),
                                 convertedImage->GetWidth(), CV_8UC1, convertedImage->GetData(),
                                 rowBytes);
 
                         resize(src[i], src[i], Size(640, 480), 0,0, INTER_LINEAR);
 
-//                        cv::namedWindow("image", 1);
                         cv::imshow("Camera-" + to_string(i), src[i]);
-                    cout << __LINE__  << endl;
+
                         key = cv::waitKey(1);
 
 #if 0
@@ -715,7 +719,7 @@ int AcquireImages(CameraList camList)
         // GetByIndex(); this is an alternative to retrieving cameras as
         // CameraPtr objects that can be quick and easy for small tasks.
         //
-        for (int i = 0; i < camList.GetSize(); i++)
+        for (int i = 0; i < camList.GetSize(); ++i)
         {
             // End acquisition
             camList.GetByIndex(i)->EndAcquisition();
@@ -790,7 +794,7 @@ int RunMultipleCameras(CameraList camList)
             // Retrieve GenICam nodemap
             INodeMap & nodeMap = camList.GetByIndex(i)->GetNodeMap();
 
-            // Configure trigger
+            // Configure trigger. Taking camera with index 0 as primary and all others as secondary.
             if(i>0)
                 isPrimary = false;
 
